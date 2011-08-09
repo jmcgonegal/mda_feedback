@@ -1,0 +1,17 @@
+/**
+ * @file
+ */
+
+#mda-feedback { position: fixed;bottom: 0;right: 0;background: #CCC;padding: 5px; cursor:pointer; }
+#mda-feedback .active { cursor:auto; width:350px;}
+#mda-feedback-highlight { display:none; }
+.active #mda-feedback-highlight { display:block; }
+
+#mda-feedback-webform,
+.active .give-fb,
+.mda-fb { display:none;}
+
+.active #mda-feedback-webform,
+.active .mda-fb { display:block;}
+
+#feedback-select { border:2px solid #ff0000;position:absolute;width:1px;height:1px;display:none;overflow:auto;z-index:9999; text-shadow: #ffffff 1px 1px 2px; color:#ff0000; font:15px arial, sans-serif; font-weight:bold; );}

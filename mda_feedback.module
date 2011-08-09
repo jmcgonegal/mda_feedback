@@ -1,0 +1,104 @@
+<?php
+/* Author: John McGonegal
+ * Todo: Alter webform to include needed fields: highlight_box, path and client
+ */
+/**
+ * Implements hook_page_alter().
+ */
+function mda_feedback_page_build(&$page) {
+	$feedback_nid = variable_get('mda_feedback_webform');
+	if(isset($feedback_nid)) {
+		$path = '/'.drupal_lookup_path('alias','node/'.$feedback_nid);
+		if($path != $_SERVER['REQUEST_URI']) {
+			/* this is kind of hacky and should, in the future, print out the feedback form instead of doing an ajax call */
+			$page['page_bottom']['mda_feedback'] = array(
+				'#markup' => '<div id="mda-feedback" ><div id="mda-feedback-inner"><a class="give-fb" href="'.$path.'">Give Feedback</a><label class="mda-fb">Highlight the problem:</label><button id="mda-feedback-highlight">Highlight</button><div id="mda-feedback-webform"></div></div></div><div id="feedback-select"></div>'
+			);
+		}
+	}
+}
+function mda_feedback_webform_submission_render_alter(&$renderable) {
+	$path = $renderable['path']['#markup'].'?highlight='.$renderable['highlight_box']['#markup'].'&description='.urlencode($renderable['description']['#value']);
+	$renderable['url']['#markup'] = '<p><strong>View Submission</strong><br /><a href="'.$path.'">'.$renderable['path']['#markup'].'</a></p>';
+
+	hide($renderable['highlight_box']);
+	hide($renderable['path']);
+	show($renderable['url']);
+}
+function mda_feedback_init() {
+	$path = drupal_get_path('module', 'mda_feedback');
+	drupal_add_css($path . '/mda_feedback.css');
+	drupal_add_js($path . '/mda_feedback.js');
+}
+
+
+/**
+ * Implements hook_menu().
+ *
+ * Provides a simple user interface that tells the developer where to go.
+ */
+function mda_feedback_menu() {
+	$items = array();
+	
+  $items['admin/content/mda_feedback'] = array(
+		'title' => 'MDA Feedback',
+    'page callback' => '_mda_feedback_page',
+		'access callback' => 'user_access',
+		'access arguments' => array('mda_feedback_edit'),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_perm().
+ */
+function mda_feedback_permission() {
+  return array(
+    'mda_feedback_edit' => array(
+			'title' => t('Select MDA Feedback Form'),
+			'description' => t('Grants access to select MDA Feedback Form.'),
+    )
+	);
+}
+
+/**
+ * A simple page to explain to the developer what to do.
+ */
+function _mda_feedback_page() {
+	$webform_types = webform_variable_get('webform_node_types');
+	
+  $nodes = array();
+  if ($webform_types) {
+    $nodes = db_select('node', 'n')
+      ->fields('n')
+      ->condition('n.type', $webform_types, 'IN')
+      ->execute()
+      ->fetchAllAssoc('nid');
+  }
+	
+	$feedback_nid = variable_get('mda_feedback_webform');
+	
+	if(isset($_POST['webform'])) {
+		foreach($nodes as $id => $node) {
+			if( $node->nid  == $_POST['webform']) {
+				$feedback_nid = $node->nid;
+				variable_set('mda_feedback_webform', $feedback_nid);
+				break;
+			}
+		}
+	}
+
+	$text = "<h1>Choose Default Website Feedback Webform</h1>";
+	$text .= '<p>The webform you select needs to have <strong>hidden</strong> field keys called highlight_box and path. You should also include a textarea with a field key named description</p>';
+	$text .= '<form action="" method="post" name="mda_feedback">';
+	foreach($nodes as $id => $node) {
+		if($node->nid == $feedback_nid) {
+			$text .= '<input name="webform" type="radio" value="'.$node->nid.'" checked>'.$node->title.'</input><br />';
+		} else {
+			$text .= '<input name="webform" type="radio" value="'.$node->nid.'">'.$node->title.'</input><br />';
+		}
+	}
+	
+	$text .= '<input type="submit" /></form>';
+	return $text;
+}

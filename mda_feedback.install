@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the field_example module.
+ */
+/**
+ * Implementation of hook_uninstall().
+ */
+function mda_feedback_uninstall() {
+  // Get global variable array
+  global $conf;
+  foreach (array_keys($conf) as $key) {
+    // Find variables that have the module prefix
+    if (strpos($key, 'mda_feedback_') === 0) {
+      variable_del($key);
+    }
+  }
+}
+
+function mda_feedback_install() {
+	variable_set('mda_feedback_webform', 56414);
+}
