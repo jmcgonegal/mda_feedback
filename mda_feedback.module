@@ -8,15 +8,22 @@
 function mda_feedback_page_build(&$page) {
 	$feedback_nid = variable_get('mda_feedback_webform');
 	if(isset($feedback_nid)) {
-		$path = '/'.drupal_lookup_path('alias','node/'.$feedback_nid);
+		// drupal_lookup_path returns false if no match is found
+		$path = drupal_lookup_path('alias','node/'.$feedback_nid);
+		
+		if(!$path) {
+			$path = 'node/'.$feedback_nid;
+		}
+		
 		if($path != $_SERVER['REQUEST_URI']) {
 			/* this is kind of hacky and should, in the future, print out the feedback form instead of doing an ajax call */
 			$page['page_bottom']['mda_feedback'] = array(
-				'#markup' => '<div id="mda-feedback" ><div id="mda-feedback-inner"><a class="give-fb" href="'.$path.'">Give Feedback</a><label class="mda-fb">Highlight the problem:</label><button id="mda-feedback-highlight">Highlight</button><div id="mda-feedback-webform"></div></div></div><div id="feedback-select"></div>'
+				'#markup' => '<div id="mda-feedback" ><div id="mda-feedback-inner"><a class="give-fb" href="/'.$path.'">Give Feedback</a><label class="mda-fb">Highlight the problem:</label><button id="mda-feedback-highlight">Highlight</button><div id="mda-feedback-webform"></div></div></div><div id="feedback-select"></div>'
 			);
 		}
 	}
 }
+
 function mda_feedback_webform_submission_render_alter(&$renderable) {
 	$path = $renderable['path']['#markup'].'?highlight='.$renderable['highlight_box']['#markup'].'&description='.urlencode($renderable['description']['#value']);
 	$renderable['url']['#markup'] = '<p><strong>View Submission</strong><br /><a href="'.$path.'">'.$renderable['path']['#markup'].'</a></p>';
@@ -25,6 +32,7 @@ function mda_feedback_webform_submission_render_alter(&$renderable) {
 	hide($renderable['path']);
 	show($renderable['url']);
 }
+
 function mda_feedback_init() {
 	$path = drupal_get_path('module', 'mda_feedback');
 	drupal_add_css($path . '/mda_feedback.css');
@@ -89,7 +97,7 @@ function _mda_feedback_page() {
 	}
 
 	$text = "<h1>Choose Default Website Feedback Webform</h1>";
-	$text .= '<p>The webform you select needs to have <strong>hidden</strong> field keys called highlight_box and path. You should also include a textarea with a field key named description</p>';
+	$text .= '<p>The webform you select needs to have <strong>hidden</strong> field keys called highlight_box, client, and path. You should also include a textarea with a field key named description</p>';
 	$text .= '<form action="" method="post" name="mda_feedback">';
 	foreach($nodes as $id => $node) {
 		if($node->nid == $feedback_nid) {
