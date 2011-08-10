@@ -19,5 +19,5 @@ function mda_feedback_uninstall() {
 }
 
 function mda_feedback_install() {
-	variable_set('mda_feedback_webform', 56414);
+
 }
