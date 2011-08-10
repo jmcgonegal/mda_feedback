@@ -1,1 +1,6 @@
-"name = mda_feedback" 
+name = MDA Feedback
+description = Feedback module for MDA seven site similar to Google+ Feedback
+package = mda_feedback
+core = 7.x
+dependencies[] = webform
+configure = "admin/content/mda_feedback"
